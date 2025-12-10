@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Zetpic — Free Browser Games</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#071028;
+      --card:#091827;
+      --accent:#38bdf8;
+      --muted:#9aa7b7;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#020617 0%, #071028 100%);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:28px;
+    }
+
+    .container{
+      width:100%;
+      max-width:1080px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+      border-radius:16px;
+      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      min-height:640px;
+    }
+
+    /* Left menu */
+    .sidebar{
+      background: linear-gradient(180deg,var(--card), rgba(2,6,23,0.6));
+      padding:22px;
+      border-right:1px solid rgba(255,255,255,0.03);
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .logo {
+      font-weight:700;
+      font-size:22px;
+      color:var(--accent);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .desc{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .menu-buttons{
+      margin-top:6px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .btn{
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,0.03);
+      color:var(--accent);
+      padding:12px 14px;
+      border-radius:10px;
+      text-decoration:none;
+      font-weight:600;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      justify-content:flex-start;
+      transition: transform .08s ease, box-shadow .08s ease;
+    }
+    .btn:hover{ transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.45) }
+    .btn.secondary{ color:#d7e7f5; background:transparent; border:1px dashed rgba(255,255,255,0.03); font-weight:600 }
+
+    /* Right content */
+    .content{
+      padding:26px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-items:stretch;
+    }
+
+    header h1{
+      margin:0;
+      font-size:24px;
+      letter-spacing:-0.2px;
+    }
+    .lead { color:var(--muted); margin-top:6px; font-size:14px; }
+
+    .game-area{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+      border-radius:12px;
+      padding:18px;
+    }
+
+    /* inner game panels */
+    .panel {
+      width:100%;
+      max-width:820px;
+      background: rgba(0,0,0,0.15);
+      border-radius:10px;
+      padding:12px;
+      display:none;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+    }
+    .panel.visible { display:flex; }
+
+    canvas { background:#0b1120; border-radius:8px; display:block }
+
+    .controls { color:var(--muted); font-size:13px; }
+
+    .scorebar { display:flex; gap:12px; align-items:center; justify-content:space-between; width:100%; }
+    .score { font-weight:700; color:var(--accent); }
+
+    /* Clicker layout */
+    .clicker-main{ display:flex; gap:18px; align-items:center; justify-content:center; width:100% }
+    .big-btn{
+      background:linear-gradient(180deg,var(--accent), #2bb6ea);
+      color:#02202a;
+      padding:28px 36px;
+      font-size:22px;
+      border-radius:12px;
+      cursor:pointer;
+      border:none;
+      font-weight:800;
+      box-shadow:0 8px 30px rgba(31,197,255,0.12);
+    }
+    .small{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,0.03);
+      padding:8px 12px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+
+    footer{ color:var(--muted); font-size:13px; text-align:center; margin-top:6px; }
+
+    /* small responsive */
+    @media (max-width:900px){
+      .container{ grid-template-columns: 1fr; }
+      .sidebar{ flex-direction:row; gap:12px; align-items:center; padding:12px; overflow-x:auto }
+      .desc{ display:none }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="application">
+    <aside class="sidebar" aria-label="Main menu">
+      <div>
+        <div class="logo">zetpic <span style="font-weight:600; font-size:12px; color:#c6f3ff; margin-left:6px;">games</span></div>
+        <div class="desc" style="margin-top:10px;">
+          This website is made for gaming — free, light browser games. Tell your friends and have fun playing!
+        </div>
+      </div>
+
+      <div class="menu-buttons" style="margin-top:auto">
+        <button class="btn" id="btn-menu">🏠 Home</button>
+        <button class="btn" id="btn-maze">🧩 Maze Game</button>
+        <button class="btn" id="btn-car">🚗 Car Game</button>
+        <button class="btn" id="btn-clicker">🖱️ Clicker Game</button>
+        <button class="btn secondary" id="btn-reset">🔁 Reset Games</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header>
+        <h1>Welcome to Zetpic</h1>
+        <div class="lead">Free browser games — maze, simple car dodger, and an idle clicker. Controls and quick tips are included in each game panel.</div>
+      </header>
+
+      <section class="game-area">
+        <!-- Home panel -->
+        <div id="panel-home" class="panel visible" style="display:flex">
+          <div style="max-width:720px; text-align:center;">
+            <h2 style="margin:0 0 8px 0">Play a Game</h2>
+            <p style="color:var(--muted); margin:0 0 14px 0">
+              Use the buttons on the left to jump straight into a game. Each game is intentionally small and lightweight so it runs in any modern browser.
+            </p>
+            <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:8px;">
+              <button class="btn" id="home-maze">🧩 Maze</button>
+              <button class="btn" id="home-car">🚗 Car</button>
+              <button class="btn" id="home-clicker">🖱️ Clicker</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Maze panel -->
+        <div id="panel-maze" class="panel">
+          <div style="width:100%; max-width:760px;">
+            <div class="scorebar">
+              <div>
+                <strong>Maze Game</strong>
+                <div class="controls">Use arrow keys (or WASD) to move. Reach the green goal to win.</div>
+              </div>
+              <div style="text-align:right">
+                <div class="score" id="maze-status">Moves: 0</div>
+                <div style="font-size:12px;color:var(--muted)">Press R to reset</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:14px; margin-top:12px; align-items:flex-start; flex-wrap:wrap;">
+              <canvas id="maze-canvas" width="640" height="480"></canvas>
+              <div style="min-width:180px;">
+                <div style="background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;">
+                  <h4 style="margin:4px 0 8px 0">Legend</h4>
+                  <div style="color:var(--muted); font-size:13px;">
+                    <div>🟦 Wall</div>
+                    <div>⬜ Path</div>
+                    <div>🧑 Player (blue)</div>
+                    <div>🏁 Goal (green)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Car panel -->
+        <div id="panel-car" class="panel">
+          <div style="width:100%; max-width:760px;">
+            <div class="scorebar">
+              <div>
+                <strong>Car Dodger</strong>
+                <div class="controls">Move left/right with arrow keys or A/D. Avoid obstacles. Survive as long as you can.</div>
+              </div>
+              <div style="text-align:right">
+                <div class="score" id="car-score">Score: 0</div>
+                <div style="font-size:12px;color:var(--muted)">Press Space to pause / resume</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <canvas id="car-canvas" width="420" height="600"></canvas>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <button class="small" id="car-start">Start</button>
+              <button class="small" id="car-restart">Restart</button>
+              <button class="small" id="car-easy">Easy</button>
+              <button class="small" id="car-hard">Hard</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clicker panel -->
+        <div id="panel-clicker" class="panel">
+          <div style="width:100%; max-width:720px; text-align:center;">
+            <div class="scorebar" style="margin-bottom:8px">
+              <div>
+                <strong>Clicker Game</strong>
+                <div class="controls">Click the big button to gain points. Buy upgrades to increase points per click.</div>
+              </div>
+              <div style="text-align:right">
+                <div class="score" id="clicker-score">0</div>
+                <div style="font-size:12px;color:var(--muted)">Points</div>
+              </div>
+            </div>
+
+            <div class="clicker-main">
+              <button id="clicker-btn" class="big-btn">CLICK!</button>
+              <div style="min-width:220px; text-align:left;">
+                <div style="background:rgba(255,255,255,0.02); padding:12px; border-radius:8px;">
+                  <div style="margin-bottom:8px;"><strong>Upgrades</strong></div>
+                  <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button class="small" id="buy-up1">Buy +1/click (Cost: 20)</button>
+                    <button class="small" id="buy-up2">Buy +5/click (Cost: 120)</button>
+                    <button class="small" id="buy-auto">Buy Auto +1/sec (Cost: 300)</button>
+                  </div>
+                  <div style="margin-top:10px; color:var(--muted); font-size:13px;">
+                    Tip: You can earn points passively with Auto upgrades.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:12px;">
+              <button class="small" id="clicker-reset">Reset Clicker</button>
+              <button class="small" id="clicker-share" onclick="alert('Tell your friends to check out Zetpic!')">Share</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <footer>
+        zetpic — lightweight browser games. Built for fun.
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    /* ---------- Panel switching ---------- */
+    const panels = {
+      home: document.getElementById('panel-home'),
+      maze: document.getElementById('panel-maze'),
+      car: document.getElementById('panel-car'),
+      clicker: document.getElementById('panel-clicker'),
+    };
+
+    function showPanel(key){
+      for (const p in panels){
+        panels[p].classList.remove('visible');
+      }
+      panels[key].classList.add('visible');
+      // focus canvas for keyboard controls
+      if (key === 'maze') document.getElementById('maze-canvas').focus();
+      if (key === 'car') document.getElementById('car-canvas').focus();
+    }
+
+    document.getElementById('btn-menu').addEventListener('click', ()=>showPanel('home'));
+    document.getElementById('btn-maze').addEventListener('click', ()=>showPanel('maze'));
+    document.getElementById('btn-car').addEventListener('click', ()=>showPanel('car'));
+    document.getElementById('btn-clicker').addEventListener('click', ()=>showPanel('clicker'));
+
+    document.getElementById('home-maze').addEventListener('click', ()=>showPanel('maze'));
+    document.getElementById('home-car').addEventListener('click', ()=>showPanel('car'));
+    document.getElementById('home-clicker').addEventListener('click', ()=>showPanel('clicker'));
+
+    document.getElementById('btn-reset').addEventListener('click', ()=> {
+      resetMaze();
+      resetCar();
+      resetClicker();
+      alert('All games reset.');
+    });
+
+    /* ---------------- MAZE GAME ---------------- */
+    const mazeCanvas = document.getElementById('maze-canvas');
+    const mctx = mazeCanvas.getContext('2d');
+    const cellSize = 32;
+    const cols = Math.floor(mazeCanvas.width / cellSize);
+    const rows = Math.floor(mazeCanvas.height / cellSize);
+
+    // A simple hardcoded maze (0 = empty, 1 = wall)
+    // We'll create a basic maze with borders and some walls
+    let mazeGrid = [];
+    function generateSimpleMaze(){
+      mazeGrid = new Array(rows).fill(0).map(()=>new Array(cols).fill(0));
+      // borders
+      for (let r=0;r<rows;r++){
+        mazeGrid[r][0]=1;
+        mazeGrid[r][cols-1]=1;
+      }
+      for (let c=0;c<cols;c++){
+        mazeGrid[0][c]=1;
+        mazeGrid[rows-1][c]=1;
+      }
+      // scatter some walls (deterministic simple pattern)
+      for (let r=2;r<rows-2;r+=2){
+        for (let c=2;c<cols-2;c+=2){
+          mazeGrid[r][c]=1;
+          // add a connecting wall to create corridors
+          if (Math.random() > 0.5) mazeGrid[r][c+1]=1;
+          else mazeGrid[r+1][c]=1;
+        }
+      }
+      // clear central area to give space
+      for (let r=Math.floor(rows/2)-1; r<=Math.floor(rows/2)+1; r++){
+        for (let c=Math.floor(cols/2)-1; c<=Math.floor(cols/2)+1; c++){
+          mazeGrid[r][c]=0;
+        }
+      }
+    }
+
+    let player = {r:1,c:1, moves:0};
+    let goal = {r: rows-2, c: cols-2};
+
+    function resetMaze(){
+      generateSimpleMaze();
+      player = {r:1,c:1, moves:0};
+      goal = {r: rows-2, c: cols-2};
+      document.getElementById('maze-status').textContent = 'Moves: 0';
+      drawMaze();
+    }
+
+    function drawMaze(){
+      mctx.clearRect(0,0,mazeCanvas.width,mazeCanvas.height);
+      for (let r=0;r<rows;r++){
+        for (let c=0;c<cols;c++){
+          const x = c*cellSize;
+          const y = r*cellSize;
+          if (mazeGrid[r][c] === 1){
+            mctx.fillStyle = '#0b3050';
+            mctx.fillRect(x,y,cellSize,cellSize);
+          } else {
+            mctx.fillStyle = '#eaf6ff10';
+            mctx.fillRect(x,y,cellSize,cellSize);
+          }
+        }
+      }
+      // draw goal
+      mctx.fillStyle = '#19d35a';
+      mctx.fillRect(goal.c*cellSize+4, goal.r*cellSize+4, cellSize-8, cellSize-8);
+
+      // draw player
+      mctx.fillStyle = '#3fb0ff';
+      mctx.beginPath();
+      const px = player.c*cellSize + cellSize/2;
+      const py = player.r*cellSize + cellSize/2;
+      mctx.arc(px,py, cellSize/3, 0, Math.PI*2);
+      mctx.fill();
+    }
+
+    function tryMoveMaze(dr,dc){
+      const nr = player.r + dr;
+      const nc = player.c + dc;
+      if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) return;
+      if (mazeGrid[nr][nc] === 1) return; // wall
+      player.r = nr; player.c = nc; player.moves++;
+      document.getElementById('maze-status').textContent = 'Moves: ' + player.moves;
+      drawMaze();
+      if (player.r === goal.r && player.c === goal.c){
+        setTimeout(()=> alert('You reached the goal! Moves: ' + player.moves), 80);
+      }
+    }
+
+    // keyboard controls for maze (arrow keys or WASD)
+    window.addEventListener('keydown', (e)=>{
+      // only respond if maze panel visible OR car panel visible based on which keys used
+      if (panels.maze.classList.contains('visible')){
+        if (['ArrowUp','w','W'].includes(e.key)){ tryMoveMaze(-1,0); e.preventDefault(); }
+        if (['ArrowDown','s','S'].includes(e.key)){ tryMoveMaze(1,0); e.preventDefault(); }
+        if (['ArrowLeft','a','A'].includes(e.key)){ tryMoveMaze(0,-1); e.preventDefault(); }
+        if (['ArrowRight','d','D'].includes(e.key)){ tryMoveMaze(0,1); e.preventDefault(); }
+        if (e.key === 'r' || e.key === 'R') resetMaze();
+      }
+      // Car controls handled elsewhere
+    });
+
+    // initialize maze
+    resetMaze();
+
+    /* ---------------- CAR GAME ---------------- */
+    const carCanvas = document.getElementById('car-canvas');
+    const cctx = carCanvas.getContext('2d');
+    let carState = {
+      running:false, paused:false, speed:1, difficulty:'easy', score:0
+    };
+
+    const lanes = 3;
+    const laneWidth = carCanvas.width / lanes;
+    let car = {lane:1, x:0, y: carCanvas.height - 110, width: laneWidth*0.6, height: 80};
+    let obstacles = [];
+    let carInterval = null;
+    let spawnTimer = 0;
+    let lastTimestamp = 0;
+
+    function resetCar(){
+      carState.running = false;
+      carState.paused = false;
+      carState.score = 0;
+      carState.speed = 1;
+      obstacles = [];
+      car.lane = 1;
+      updateCarUI();
+      drawCarScene();
+    }
+
+    function startCar(){
+      if (carState.running) return;
+      carState.running = true;
+      carState.paused = false;
+      lastTimestamp = performance.now();
+      window.requestAnimationFrame(carLoop);
+    }
+
+    function gameOverCar(){
+      carState.running = false;
+      alert('Game over! Score: ' + Math.floor(carState.score));
+    }
+
+    function updateCarUI(){
+      document.getElementById('car-score').textContent = 'Score: ' + Math.floor(carState.score);
+    }
+
+    document.getElementById('car-start').addEventListener('click', startCar);
+    document.getElementById('car-restart').addEventListener('click', ()=>{ resetCar(); startCar(); });
+    document.getElementById('car-easy').addEventListener('click', ()=>{ carState.difficulty='easy'; carState.speed=1; });
+    document.getElementById('car-hard').addEventListener('click', ()=>{ carState.difficulty='hard'; carState.speed=1.6; });
+
+    function spawnObstacle(){
+      const lane = Math.floor(Math.random()*lanes);
+      const width = laneWidth * 0.6;
+      const height = 60 + Math.random()*40;
+      const x = lane*laneWidth + (laneWidth - width)/2;
+      obstacles.push({x, y:-height, width, height, lane});
+    }
+
+    function drawCarScene(){
+      cctx.clearRect(0,0,carCanvas.width,carCanvas.height);
+      // road background
+      cctx.fillStyle = '#111827';
+      cctx.fillRect(0,0,carCanvas.width,carCanvas.height);
+      // lanes
+      for (let i=1;i<lanes;i++){
+        const lx = i*laneWidth;
+        cctx.strokeStyle = '#2a3544';
+        cctx.setLineDash([12,10]);
+        cctx.beginPath();
+        cctx.moveTo(lx,0);
+        cctx.lineTo(lx,carCanvas.height);
+        cctx.stroke();
+      }
+      cctx.setLineDash([]);
+
+      // draw obstacles
+      for (const ob of obstacles){
+        cctx.fillStyle = '#d94a4a';
+        cctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      }
+
+      // draw player car (rounded rect)
+      const carX = car.lane*laneWidth + (laneWidth - car.width)/2;
+      cctx.fillStyle = '#38bdf8';
+      roundRect(cctx, carX, car.y, car.width, car.height, 8, true, false);
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      if (typeof r === 'undefined') r = 5;
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y,   x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x,   y+h, r);
+      ctx.arcTo(x,   y+h, x,   y,   r);
+      ctx.arcTo(x,   y,   x+w, y,   r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function carLoop(timestamp){
+      if (!carState.running) return;
+      const dt = Math.min(50, timestamp - lastTimestamp);
+      lastTimestamp = timestamp;
+      if (!carState.paused){
+        // timing & spawn obstacles
+        spawnTimer += dt;
+        const spawnRate = carState.difficulty === 'hard' ? 700 : 1100;
+        if (spawnTimer > spawnRate){
+          spawnObstacle();
+          spawnTimer = 0;
+        }
+
+        // move obstacles
+        const speedFactor = 0.18 * carState.speed;
+        for (let i=obstacles.length-1;i>=0;i--){
+          obstacles[i].y += speedFactor * (60/16) * dt;
+          // collision check
+          const ob = obstacles[i];
+          const carX = car.lane*laneWidth + (laneWidth - car.width)/2;
+          if (rectsOverlap(carX, car.y, car.width, car.height, ob.x, ob.y, ob.width, ob.height)){
+            gameOverCar();
+            return;
+          }
+          if (ob.y > carCanvas.height + 100) obstacles.splice(i,1);
+        }
+
+        // increase score
+        carState.score += dt * 0.02 * (carState.difficulty === 'hard' ? 1.2 : 1);
+        updateCarUI();
+      }
+
+      drawCarScene();
+      window.requestAnimationFrame(carLoop);
+    }
+
+    function rectsOverlap(x1,y1,w1,h1,x2,y2,w2,h2){
+      return !(x1+w1 < x2 || x2+w2 < x1 || y1+h1 < y2 || y2+h2 < y1);
+    }
+
+    // car controls
+    window.addEventListener('keydown', (e)=>{
+      if (!panels.car.classList.contains('visible')) return;
+      if (['ArrowLeft','a','A'].includes(e.key)) {
+        car.lane = Math.max(0, car.lane - 1);
+        drawCarScene();
+      }
+      if (['ArrowRight','d','D'].includes(e.key)) {
+        car.lane = Math.min(lanes-1, car.lane + 1);
+        drawCarScene();
+      }
+      if (e.code === 'Space') {
+        carState.paused = !carState.paused;
+        e.preventDefault();
+      }
+    });
+
+    // init car
+    resetCar();
+
+    /* ---------------- CLICKER GAME ---------------- */
+    let clicker = {
+      points: 0,
+      perClick: 1,
+      autos: 0
+    };
+
+    const clickerScoreEl = document.getElementById('clicker-score');
+    const clickBtn = document.getElementById('clicker-btn');
+
+    function updateClickUI(){
+      clickerScoreEl.textContent = Math.floor(clicker.points);
+      document.getElementById('buy-up1').textContent = 'Buy +1/click (Cost: 20)';
+      document.getElementById('buy-up2').textContent = 'Buy +5/click (Cost: 120)';
+      document.getElementById('buy-auto').textContent = 'Buy Auto +1/sec (Cost: 300)';
+    }
+
+    clickBtn.addEventListener('click', ()=>{
+      clicker.points += clicker.perClick;
+      updateClickUI();
+    });
+
+    document.getElementById('buy-up1').addEventListener('click', ()=>{
+      if (clicker.points >= 20){
+        clicker.points -= 20;
+        clicker.perClick += 1;
+        updateClickUI();
+      } else alert('Not enough points.');
+    });
+    document.getElementById('buy-up2').addEventListener('click', ()=>{
+      if (clicker.points >= 120){
+        clicker.points -= 120;
+        clicker.perClick += 5;
+        updateClickUI();
+      } else alert('Not enough points.');
+    });
+    document.getElementById('buy-auto').addEventListener('click', ()=>{
+      if (clicker.points >= 300){
+        clicker.points -= 300;
+        clicker.autos += 1;
+        updateClickUI();
+      } else alert('Not enough points.');
+    });
+
+    function clickerTick(){
+      if (clicker.autos > 0){
+        clicker.points += clicker.autos;
+        updateClickUI();
+      }
+    }
+    // autos every second
+    setInterval(clickerTick, 1000);
+
+    document.getElementById('clicker-reset').addEventListener('click', resetClicker);
+
+    function resetClicker(){
+      clicker.points = 0;
+      clicker.perClick = 1;
+      clicker.autos = 0;
+      updateClickUI();
+    }
+    resetClicker();
+
+    /* initial draw for canvases */
+    drawMaze();
+    drawCarScene();
+
+    // helper: reset all game states quickly
+    function resetMaze(){ generateSimpleMaze(); player = {r:1,c:1,moves:0}; goal = {r:rows-2, c:cols-2}; document.getElementById('maze-status').textContent = 'Moves: 0'; drawMaze(); }
+    function resetCar(){ carState.running=false; carState.paused=false; carState.score=0; carState.difficulty='easy'; carState.speed=1; obstacles=[]; car.lane=1; updateCarUI(); drawCarScene(); }
+    function resetClicker(){ clicker.points=0; clicker.perClick=1; clicker.autos=0; updateClickUI(); }
+
+  </script>
+</body>
+</html>
