@@ -1,16 +1,14 @@
-## Hi there 👋
+# Zetpic
 
-<!--
-**zetpic/zetpic** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Welcome to **Zetpic**, a lightweight website where you can play fun browser games!  
 
-Here are some ideas to get you started:
+🎮 **Features**:
+- Play games directly in your browser
+- Works on nearly all modern devices
+- 100% free for everyone
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+💡 **Enjoy & Share!**  
+Tell your friends and have fun with Zetpic games online!  
+
+
+
